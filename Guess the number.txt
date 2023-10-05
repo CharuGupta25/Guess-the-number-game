@@ -1,0 +1,128 @@
+import javax.swing.*;
+import java.awt.*;
+import java.awt.event.*;
+import java.sql.*;
+
+public class LibraryManagementSystem extends JFrame {
+    private JTextField titleField, authorField, searchField;
+    private JTextArea resultArea;
+    private Connection connection;
+    private Statement statement;
+
+    public LibraryManagementSystem() {
+        setTitle("Digital Library Management System");
+        setSize(500, 400);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
+        titleField = new JTextField(20);
+        authorField = new JTextField(20);
+        searchField = new JTextField(20);
+        resultArea = new JTextArea(10, 40);
+
+        JButton addButton = new JButton("Add Book");
+        JButton searchButton = new JButton("Search");
+
+        addButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                addBook();
+            }
+        });
+
+        searchButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                searchBooks();
+            }
+        });
+
+        JPanel inputPanel = new JPanel();
+        inputPanel.add(new JLabel("Title:"));
+        inputPanel.add(titleField);
+        inputPanel.add(new JLabel("Author:"));
+        inputPanel.add(authorField);
+        inputPanel.add(addButton);
+
+        JPanel searchPanel = new JPanel();
+        searchPanel.add(new JLabel("Search Title:"));
+        searchPanel.add(searchField);
+        searchPanel.add(searchButton);
+
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(new BorderLayout());
+        mainPanel.add(inputPanel, BorderLayout.NORTH);
+        mainPanel.add(resultArea, BorderLayout.CENTER);
+        mainPanel.add(searchPanel, BorderLayout.SOUTH);
+
+        add(mainPanel);
+        connectToDatabase();
+
+        setLocationRelativeTo(null);
+        setVisible(true);
+    }
+
+    private void connectToDatabase() {
+        try {
+            connection = DriverManager.getConnection("jdbc:sqlite:library.db");
+            statement = connection.createStatement();
+
+            statement.executeUpdate("CREATE TABLE IF NOT EXISTS books (id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, author TEXT)");
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void addBook() {
+        String title = titleField.getText();
+        String author = authorField.getText();
+
+        try {
+            String query = "INSERT INTO books (title, author) VALUES (?, ?)";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, title);
+            preparedStatement.setString(2, author);
+            preparedStatement.executeUpdate();
+            resultArea.setText("Book added successfully!");
+        } catch (SQLException e) {
+            e.printStackTrace();
+            resultArea.setText("Error adding book.");
+        }
+
+        titleField.setText("");
+        authorField.setText("");
+    }
+
+    private void searchBooks() {
+        String searchText = searchField.getText();
+
+        try {
+            String query = "SELECT * FROM books WHERE title LIKE ?";
+            PreparedStatement preparedStatement = connection.prepareStatement(query);
+            preparedStatement.setString(1, "%" + searchText + "%");
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            StringBuilder resultText = new StringBuilder();
+            while (resultSet.next()) {
+                int id = resultSet.getInt("id");
+                String title = resultSet.getString("title");
+                String author = resultSet.getString("author");
+                resultText.append("ID: ").append(id).append(", Title: ").append(title).append(", Author: ").append(author).append("\n");
+            }
+
+            resultArea.setText(resultText.toString());
+        } catch (SQLException e) {
+            e.printStackTrace();
+            resultArea.setText("Error searching for books.");
+        }
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> {
+            new LibraryManagementSystem();
+        });
+    }
+}
+
+public class GuessTheNumber {
+    public static void main(String[] args) {
+       window w=new window();  
+    }
+}
